@@ -7,13 +7,15 @@ import axios from 'axios';
 import Modal from './Comparison.jsx';
 import useLocalStorage from './useLocalStorage.js';
 
-const RelatedProducts = ({scrollRef}) => {
+const RelatedProducts = ({ scrollRef }) => {
   const id = useContext(Context).id;
   const [show, setShow] = useState(false);
   const [reference, setRef] = useState('');
   const [list, setList] = useState('');
   const [mainProduct, setMain] = useState({});
-  const [outfit, setOutfit] = useLocalStorage('outfit', [{id: 1, name: "ADD TO YOUR OUTFIT"}])
+  const [outfit, setOutfit] = useLocalStorage('outfit', [
+    { id: 1, name: 'ADD TO YOUR OUTFIT' },
+  ]);
   const [deleteID, setDelete] = useState(0);
 
   useEffect(() => {
@@ -22,30 +24,34 @@ const RelatedProducts = ({scrollRef}) => {
     let stylesGet = axios.get(`/products/${id}/styles`);
     let reviewsGet = axios.get(`/reviews/meta/?product_id=${id}`);
     let mainEndpoints = [];
-    mainEndpoints.push(productGet, stylesGet, reviewsGet)
+    mainEndpoints.push(productGet, stylesGet, reviewsGet);
 
     Promise.all(mainEndpoints)
       .then((res) => {
         for (let j = 0; j < res.length; j++) {
           setMain((prevState) => ({
-            ...prevState, ...res[j].data
-          }))
+            ...prevState,
+            ...res[j].data,
+          }));
         }
       })
       .catch((err) => console.log(err));
 
     // GET RELATED PROUDCTS DATA
-    axios.get(`/products/${id}/related`)
+    axios
+      .get(`/products/${id}/related`)
       .then((related) => {
         let endpoints = [];
         for (var i = 0; i < related.data.length; i++) {
           let currentID = related.data[i];
           let currentProduct = axios.get(`/products/${currentID}`);
           let currentStyle = axios.get(`/products/${currentID}/styles`);
-          let currentReview = axios.get(`/reviews/meta/?product_id=${currentID}`);
+          let currentReview = axios.get(
+            `/reviews/meta/?product_id=${currentID}`
+          );
           endpoints.push(currentProduct, currentStyle, currentReview);
         }
-        return Promise.all(endpoints)
+        return Promise.all(endpoints);
       })
       .then((result) => {
         let PRODUCT_ENDPOINT_COUNT = 3;
@@ -54,14 +60,14 @@ const RelatedProducts = ({scrollRef}) => {
         for (let i = 0; i < result.length; i++) {
           // let productID = `${result[i].data.id || result[i].data.product_id}`;
           let order = Math.floor(i / PRODUCT_ENDPOINT_COUNT);
-          products[order] = {...products[order], ...result[i].data}
+          products[order] = { ...products[order], ...result[i].data };
           // products[productID] = {...products[productID], ...result[i].data, order}
         }
         // console.log("PRODUCTS", products);
         setList(products);
       })
-      .catch((err) => console.log(err));
-
+      .then(() => console.log('list made'))
+      .catch((err) => console.log('rekt', err));
   }, [id]);
 
   // console.log("WHATS IN MOFO LIST", list)
@@ -71,29 +77,24 @@ const RelatedProducts = ({scrollRef}) => {
 
   const handleAddClick = (e) => {
     let mainId = mainProduct.id;
-    const isExist = outfit.some(({id}) => id === mainId);
+    const isExist = outfit.some(({ id }) => id === mainId);
     if (!isExist) {
-      setOutfit((prevState) => ([
-        ...prevState, mainProduct
-      ]))
+      setOutfit((prevState) => [...prevState, mainProduct]);
     }
   };
 
   useEffect(() => {
     let thisID = deleteID;
-    const index = outfit.findIndex(({id}) => id === thisID);
+    const index = outfit.findIndex(({ id }) => id === thisID);
     if (index !== -1) {
-      setOutfit([
-        ...outfit.slice(0, index),
-        ...outfit.slice(index + 1)
-      ]);
+      setOutfit([...outfit.slice(0, index), ...outfit.slice(index + 1)]);
       setDelete(0);
     }
-  }, [deleteID])
+  }, [deleteID]);
 
   // console.log('THIS IS OUTFIT', outfit)
 
-  return(
+  return (
     <div>
       <h3>Related Products</h3>
       <ProductsList
@@ -119,9 +120,8 @@ const RelatedProducts = ({scrollRef}) => {
         mainProduct={mainProduct}
       />
     </div>
-
-  )
-}
+  );
+};
 
 export default RelatedProducts;
 
@@ -142,5 +142,5 @@ export default RelatedProducts;
 //another line console.log list[0].id
 
 //async data
-  // when data exist
-  // when data does not exist
+// when data exist
+// when data does not exist
